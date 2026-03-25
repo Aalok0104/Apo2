@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Memory Gallery</title>
+    <style>
+      :root {
+        --bg1: #1d0b1d;
+        --bg2: #3a1232;
+        --card: rgba(255, 255, 255, 0.09);
+        --line: rgba(255, 204, 150, 0.35);
+        --text: #fff4ea;
+        --accent: #ffc58f;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--text);
+        font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+        background:
+          radial-gradient(circle at 80% 12%, #5d2350 0%, transparent 38%),
+          radial-gradient(circle at 12% 88%, #311437 0%, transparent 30%),
+          linear-gradient(145deg, var(--bg1), var(--bg2));
+      }
+
+      .wrap {
+        width: min(1100px, 94vw);
+        margin: 0 auto;
+        padding: 28px 0 36px;
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        letter-spacing: 0.05em;
+      }
+
+      p {
+        margin: 0;
+        color: #f8dece;
+      }
+
+      .grid {
+        margin-top: 20px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 14px;
+      }
+
+      .tile {
+        border: 1px solid var(--line);
+        background: var(--card);
+        border-radius: 16px;
+        padding: 10px;
+        min-height: 260px;
+      }
+
+      .tile img {
+        width: 100%;
+        aspect-ratio: 4 / 5;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(0, 0, 0, 0.25);
+      }
+
+      .placeholder {
+        width: 100%;
+        aspect-ratio: 4 / 5;
+        border-radius: 10px;
+        border: 1px dashed rgba(255, 255, 255, 0.3);
+        display: grid;
+        place-items: center;
+        padding: 10px;
+        text-align: center;
+        font-size: 0.9rem;
+        color: #ffd6be;
+        background: rgba(0, 0, 0, 0.2);
+      }
+
+      .name {
+        margin-top: 8px;
+        font-size: 0.82rem;
+        word-break: break-all;
+        color: var(--accent);
+      }
+
+      .btn {
+        display: inline-block;
+        margin-top: 16px;
+        text-decoration: none;
+        color: #2d1323;
+        font-weight: 700;
+        background: var(--accent);
+        border-radius: 999px;
+        padding: 10px 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <h1>Memory Gallery</h1>
+      <p>This QR is configured for 6 images. Missing files will show as placeholders.</p>
+
+      <section class="grid" id="galleryGrid"></section>
+
+      <a class="btn" href="qr-codes.html">Back to QR Page</a>
+    </main>
+
+    <script>
+      function parseImagesFromQuery() {
+        const params = new URLSearchParams(window.location.search);
+        const raw = params.get("imgs");
+        if (!raw) return [];
+        try {
+          return decodeURIComponent(raw)
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean)
+            .slice(0, 6);
+        } catch (err) {
+          console.error(err);
+          return [];
+        }
+      }
+
+      function renderTile(path, index) {
+        const tile = document.createElement("article");
+        tile.className = "tile";
+
+        const img = document.createElement("img");
+        img.src = path;
+        img.alt = `Memory ${index + 1}`;
+
+        img.addEventListener("error", () => {
+          tile.innerHTML = `
+            <div class="placeholder">Image not found.<br />Add this file later.</div>
+            <div class="name">${path}</div>
+          `;
+        });
+
+        const name = document.createElement("div");
+        name.className = "name";
+        name.textContent = path;
+
+        tile.appendChild(img);
+        tile.appendChild(name);
+        return tile;
+      }
+
+      const grid = document.getElementById("galleryGrid");
+      const images = parseImagesFromQuery();
+
+      const padded = [...images];
+      while (padded.length < 6) {
+        padded.push("assets/your-image-here.jpg");
+      }
+
+      padded.forEach((path, index) => {
+        grid.appendChild(renderTile(path, index));
+      });
+    </script>
+  </body>
+</html>

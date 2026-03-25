@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Memory QR Set</title>
+    <style>
+      :root {
+        --bg1: #0c1f26;
+        --bg2: #184754;
+        --card: rgba(255, 255, 255, 0.1);
+        --line: rgba(255, 255, 255, 0.28);
+        --text: #f3fbff;
+        --accent: #ffd166;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--text);
+        font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+        background:
+          radial-gradient(circle at 15% 10%, #2f7d8f 0%, transparent 45%),
+          radial-gradient(circle at 90% 85%, #10313c 0%, transparent 35%),
+          linear-gradient(135deg, var(--bg1), var(--bg2));
+      }
+
+      .wrap {
+        width: min(1100px, 94vw);
+        margin: 0 auto;
+        padding: 28px 0 36px;
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        letter-spacing: 0.06em;
+        font-size: clamp(1.35rem, 4vw, 2rem);
+      }
+
+      p {
+        margin: 0;
+        line-height: 1.45;
+        color: #d9f2fa;
+      }
+
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        margin-top: 22px;
+      }
+
+      .card {
+        border: 1px solid var(--line);
+        background: var(--card);
+        border-radius: 18px;
+        padding: 14px;
+        backdrop-filter: blur(8px);
+        box-shadow: 0 14px 24px rgba(0, 0, 0, 0.22);
+      }
+
+      .preview-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+        margin-bottom: 12px;
+      }
+
+      .preview-grid img {
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .label {
+        margin: 0 0 10px;
+        font-weight: 700;
+        color: var(--accent);
+      }
+
+      .qr {
+        width: 100%;
+        border-radius: 10px;
+        background: #fff;
+        padding: 8px;
+      }
+
+      .url {
+        margin-top: 8px;
+        font-size: 0.78rem;
+        opacity: 0.88;
+        overflow-wrap: anywhere;
+      }
+
+      .hint {
+        margin-top: 18px;
+        font-size: 0.9rem;
+      }
+
+      .small {
+        margin-top: 8px;
+        font-size: 0.78rem;
+        color: #cde8f1;
+      }
+
+      .btn {
+        display: inline-block;
+        margin-top: 18px;
+        text-decoration: none;
+        color: #10232b;
+        font-weight: 700;
+        background: var(--accent);
+        border-radius: 999px;
+        padding: 10px 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <h1>2 QR Codes, 6 Images Each</h1>
+      <p>
+        Each QR opens a gallery page with 6 images. You can keep placeholders now
+        and add missing image files later.
+      </p>
+
+      <section class="cards" id="qrGrid"></section>
+
+      <p class="hint">
+        Tip: Right-click any QR and save it if you want to print separately.
+      </p>
+      <a class="btn" href="index.html">Back to AR Page</a>
+    </main>
+
+    <script>
+      const qrSets = [
+        {
+          name: "QR 1",
+          images: [
+            "assets/set1-01.jpg",
+            "assets/set1-02.jpg",
+            "assets/set1-03.jpg",
+            "assets/set1-04.jpg",
+            "assets/set1-05.jpg",
+            "assets/set1-06.jpg"
+          ]
+        },
+        {
+          name: "QR 2",
+          images: [
+            "assets/set2-01.jpg",
+            "assets/set2-02.jpg",
+            "assets/set2-03.jpg",
+            "assets/set2-04.jpg",
+            "assets/set2-05.jpg",
+            "assets/set2-06.jpg"
+          ]
+        }
+      ];
+
+      function getBaseUrl() {
+        const path = window.location.pathname;
+        const folderPath = path.endsWith("/") ? path : path.slice(0, path.lastIndexOf("/") + 1);
+        return window.location.origin + folderPath;
+      }
+
+      function buildQrImage(url) {
+        const api = "https://api.qrserver.com/v1/create-qr-code/?size=360x360&ecc=M&data=";
+        return api + encodeURIComponent(url);
+      }
+
+      const baseUrl = getBaseUrl();
+      const grid = document.getElementById("qrGrid");
+
+      function buildGalleryUrl(images) {
+        const encoded = encodeURIComponent(images.join(","));
+        return baseUrl + "memory-gallery.html?imgs=" + encoded;
+      }
+
+      function previewGrid(images, label) {
+        return images
+          .map(
+            (img, index) =>
+              `<img src="${img}" alt="${label} image ${index + 1}" onerror="this.style.opacity='0.25'; this.title='Add this file later';" />`
+          )
+          .join("");
+      }
+
+      qrSets.forEach((set) => {
+        const galleryUrl = buildGalleryUrl(set.images);
+        const card = document.createElement("article");
+        card.className = "card";
+
+        card.innerHTML = `
+          <div class="preview-grid">${previewGrid(set.images, set.name)}</div>
+          <p class="label">${set.name} (6 images)</p>
+          <img class="qr" src="${buildQrImage(galleryUrl)}" alt="QR code for ${set.name}" />
+          <p class="url">${galleryUrl}</p>
+          <p class="small">Scan to open all 6 images on one page.</p>
+        `;
+
+        grid.appendChild(card);
+      });
+    </script>
+  </body>
+</html>

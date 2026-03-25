@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Our Memories - For Her</title>
+
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script>
+      async function startCamera() {
+        const video = document.getElementById("cameraFeed");
+        const btn = document.getElementById("startBtn");
+        const status = document.getElementById("statusText");
+
+        try {
+          if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
+            const permission = await DeviceOrientationEvent.requestPermission();
+            if (permission !== "granted") {
+              status.textContent = "Motion permission denied. You can still try moving manually.";
+            }
+          }
+
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: { ideal: "environment" },
+              width: { ideal: 1280 },
+              height: { ideal: 720 }
+            },
+            audio: false
+          });
+
+          video.srcObject = stream;
+          await video.play();
+
+          btn.style.display = "none";
+          status.textContent = "Rotate slowly to discover all messages and memories around you.";
+        } catch (err) {
+          status.textContent = "Camera could not start. Please allow camera permission and refresh.";
+          console.error(err);
+        }
+      }
+
+      window.addEventListener("DOMContentLoaded", () => {
+        const scene = document.querySelector("a-scene");
+        if (!scene) return;
+
+        scene.addEventListener("loaded", () => {
+          if (scene.renderer) {
+            scene.renderer.setClearColor(0x000000, 0);
+          }
+          scene.object3D.background = null;
+        });
+      });
+    </script>
+
+    <style>
+      :root {
+        --bg-start: #1a0b0b;
+        --bg-end: #3b1111;
+        --card: rgba(20, 8, 8, 0.84);
+        --border: rgba(255, 209, 122, 0.45);
+        --gold: #ffd17a;
+        --red: #ff4d5a;
+        --text: #fff7ea;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        overflow: hidden;
+        font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+        background: radial-gradient(circle at 20% 20%, var(--bg-end), var(--bg-start));
+        color: var(--text);
+      }
+
+      #cameraFeed {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        object-fit: cover;
+        z-index: 0;
+        background: #000;
+      }
+
+      #arOverlay {
+        position: fixed;
+        inset: 0;
+        z-index: 1;
+        background: transparent !important;
+      }
+
+      #arOverlay canvas {
+        background: transparent !important;
+      }
+
+      .instructions {
+        position: fixed;
+        top: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(92vw, 560px);
+        padding: 14px 16px;
+        border-radius: 14px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        backdrop-filter: blur(8px);
+        z-index: 10;
+        text-align: center;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+      }
+
+      .instructions h1 {
+        margin: 0 0 8px;
+        font-size: 1.2rem;
+        letter-spacing: 0.08em;
+        color: var(--gold);
+      }
+
+      .instructions p {
+        margin: 0;
+        line-height: 1.4;
+        font-size: 0.95rem;
+      }
+
+      .tip {
+        position: fixed;
+        bottom: 64px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(92vw, 520px);
+        z-index: 10;
+        text-align: center;
+        font-size: 0.9rem;
+        color: #ffe8be;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+      }
+
+      .controls {
+        position: fixed;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: 14px;
+        z-index: 11;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .start-btn {
+        border: 0;
+        border-radius: 999px;
+        padding: 10px 16px;
+        color: #230404;
+        font-weight: 700;
+        background: linear-gradient(135deg, #ffd17a, #ffb84d);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+      }
+
+      .status {
+        font-size: 0.82rem;
+        color: #ffe9bf;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+      }
+
+      @media (max-width: 640px) {
+        .instructions h1 {
+          font-size: 1.04rem;
+        }
+
+        .instructions p,
+        .tip {
+          font-size: 0.86rem;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <video id="cameraFeed" autoplay playsinline muted></video>
+
+    <div class="instructions">
+      <h1>FOR YOU</h1>
+      <p>
+        Scan one QR to open this page, tap Start AR, allow camera, then rotate slowly to explore all 360 degrees.
+      </p>
+    </div>
+
+    <div class="tip">
+      No marker required. Camera feed is the background and memories are placed around you in 360 view.
+    </div>
+
+    <div class="controls">
+      <button id="startBtn" class="start-btn" type="button" onclick="startCamera()">Start AR</button>
+      <span id="statusText" class="status">Ready when you are.</span>
+    </div>
+
+    <a-scene
+      id="arOverlay"
+      embedded
+      renderer="antialias: true; alpha: true"
+      vr-mode-ui="enabled: false"
+      device-orientation-permission-ui="enabled: true"
+    >
+      <a-assets>
+        <img id="m1" src="assets/set1-01.jpg" alt="Memory 1" />
+        <img id="m2" src="assets/set1-02.jpg" alt="Memory 2" />
+        <img id="m3" src="assets/set1-03.jpg" alt="Memory 3" />
+        <img id="m4" src="assets/set1-04.jpg" alt="Memory 4" />
+        <img id="m5" src="assets/set1-05.jpg" alt="Memory 5" />
+        <img id="m6" src="assets/set1-06.jpg" alt="Memory 6" />
+      </a-assets>
+
+      <a-entity>
+        <a-text value="I AM SORRY" color="#ff4d5a" align="center" width="7" position="0 2 -4"></a-text>
+        <a-text value="I will always make you feel special" color="#ffd17a" align="center" width="3" position="0 1.45 -3.5"></a-text>
+        <a-text value="You are my world" color="#ffe6b5" align="center" width="3" position="3.9 1.45 0" rotation="0 -90 0"></a-text>
+        <a-text value="I am sorry for being a dumb guy" color="#ffe6b5" align="center" width="3" position="-3.9 1.45 0" rotation="0 90 0"></a-text>
+        <a-text value="I am yours always" color="#ffe6b5" align="center" width="3" position="0 1.45 3.9" rotation="0 180 0"></a-text>
+        <a-text value="Please forgive me" color="#ffd17a" align="center" width="3" position="2.8 1.9 2.8" rotation="0 -135 0"></a-text>
+
+        <a-image src="#m1" position="-1.8 1.3 -3.2" rotation="0 20 0" width="1.1" height="1.5" material="shader: flat"></a-image>
+        <a-image src="#m2" position="1.8 1.3 -3.2" rotation="0 -20 0" width="1.1" height="1.5" material="shader: flat"></a-image>
+        <a-image src="#m3" position="3.2 1.3 1.8" rotation="0 -60 0" width="1.05" height="1.45" material="shader: flat"></a-image>
+        <a-image src="#m4" position="-3.2 1.3 1.8" rotation="0 60 0" width="1.05" height="1.45" material="shader: flat"></a-image>
+        <a-image src="#m5" position="1.7 1.3 3.2" rotation="0 -150 0" width="1.05" height="1.45" material="shader: flat"></a-image>
+        <a-image src="#m6" position="-1.7 1.3 3.2" rotation="0 150 0" width="1.05" height="1.45" material="shader: flat"></a-image>
+
+        <a-torus position="0 1 -2.7" radius="0.3" radius-tubular="0.06" color="#ff4d5a" arc="330" rotation="0 0 20">
+          <a-animation attribute="rotation" to="0 360 20" loop="true" dur="2800" easing="linear"></a-animation>
+        </a-torus>
+      </a-entity>
+
+      <a-entity light="type: ambient; intensity: 1; color: #ffffff"></a-entity>
+      <a-entity light="type: directional; intensity: 0.6; color: #ffd17a" position="1 3 2"></a-entity>
+
+      <a-camera
+        position="0 1.6 0"
+        look-controls="enabled: true; magicWindowTrackingEnabled: true"
+        wasd-controls="enabled: false"
+      ></a-camera>
+    </a-scene>
+  </body>
+</html>
